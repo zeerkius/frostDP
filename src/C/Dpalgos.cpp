@@ -34,6 +34,11 @@ struct CoinChange {
 	}
 
 
+	int MaxContribution() {
+
+	}
+
+
 };
 
 
@@ -48,6 +53,13 @@ int main() {
     std::cout << inst.TotalWays() << "\n";
 
 };
+
+
+
+
+
+
+
 
 
 

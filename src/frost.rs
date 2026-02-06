@@ -12,7 +12,7 @@
 )]
 
 use std::*;
-
+use std::collections::{HashSet,HashMap};
 
 pub struct CoinChange{
     pub coins : Vec<usize>,
@@ -62,34 +62,69 @@ impl CoinChange{
 
             }
         }
+        
 
         dp[m - 1][n - 1]
 
     }
     
     
+    pub fn maxContribution(self) -> HashMap<i32,i32>{
+        // tree of choices
+        let mut sequences : Vec<Vec<i32>> = vec![];
+        let mut path : Vec<i32> = vec![];
+        let coins = self.coins.iter().map(|x| *x as i32).collect();
+        
+        let mut frequency_map : HashMap<i32,i32> = HashMap::new();
+            
+        
+        
+        fn dfs(s:i32,T:i32,sequences: &mut Vec<Vec<i32>>,path: &mut Vec<i32>,coins:Vec<i32>) -> (){
+            if s == T{
+                sequences.push(path.clone());
+                return 
+            }
+            if s > T{
+                return
+            }
+            for c in coins.iter(){
+                path.push(c.clone()); // otherwise it will consume by value and cause moving errors
+                let denomination : i32 = c.clone();
+                let sum : i32 = s + denomination;
+                dfs(sum,T,sequences,path,coins.clone())
+            }
+        }
+        dfs(0,self.T,&mut sequences,&mut path,coins);
+        
+        // we will then flatten sequences and make a HashMap that Will essentially show the frequency of all denominations 
+        // using all sequences that sum to T
+        
+        let sequences = sequences.iter().flatten();
+        
+        for d in sequences{
+            *frequency_map.entry(*d).or_insert(0) += 1;
+        }
+        
+        frequency_map
+        
+    }
+    
+        
+        
+    
+
+        
     
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
+    
+    
+    
+    
+    
     pub fn end(self,inst:CoinChange) -> (){
-        std::mem::drop(inst);
+        drop(inst);
     }
 
-
-
+    
 }

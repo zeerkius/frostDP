@@ -16,8 +16,8 @@ mod frost;
 use frost::CoinChange;
 
 fn main() {
-    let c = CoinChange::new(vec![1,2,5,10,20,50,100,200],200);
-    let res =  c.CoinChangeTotalWays();
+    let c = CoinChange::new(vec![1,2,5],10);
+    let res =  c.maxContribution();
     
     println!(" values {:?}",res);
     
