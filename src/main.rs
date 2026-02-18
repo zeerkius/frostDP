@@ -17,7 +17,7 @@ use frost::CoinChange;
 
 fn main() {
     let c = CoinChange::new(vec![1,2,5],10);
-    let res =  c.maxContribution();
+    let res =  c.k_resources(7);
     
     println!(" values {:?}",res);
     
