@@ -141,3 +141,64 @@ impl CoinChange {
     }
 }
 
+
+pub struct STB{
+    n_sided : usize
+}
+
+
+impl STB{
+    pub fn new(n_sided : usize) -> Self{
+        Self{
+            n_sided
+        }
+    }
+    
+    
+    pub fn max_error(self,choices: Vec<i32>) -> i32{
+        0
+    }
+    
+    pub fn get_expectation(self) -> i32{
+        0
+    }
+    
+    pub fn make_cards(self) -> Vec<i32>{
+        vec![]
+    }
+    
+    pub fn dfs(self) -> (){
+        
+    }
+    
+    
+    pub fn dfs_strat(self) -> (){
+        
+        
+        
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    pub fn end(self, inst: STB) -> (){
+        drop(inst);
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+}
+
