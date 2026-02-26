@@ -52,7 +52,27 @@ Assuming that Bob plays with an optimal strategy, what is the expected number of
     let res =  stb1.dfs();
     println!(" values {:?}",res); // this will enumerate all terminations or possible outcomes of the game until termination
 
+# sudoku
+Sudoku is a logic-based number puzzle that originated from earlier Latin square puzzles studied in combinatorics, with its modern form popularized in Japan in the 1980s after being introduced by American puzzle designer Howard Garns in 1979.
+The game consists of filling a 9x9 grid so that each row, column, and a 3x3 subgrid contains the digits 1 through 9 exactly once, making it a structured constraint satisfaction problem.
+From a graph theory perspective, Sudoku can be modeled as a graph coloring problem where each cell represents a vertex and edges connect cells that cannot share the same value.
+Solving Sudoku therefore corresponds to properly coloring this graph with nine colors under strict adjacency constraints. Because of these properties, Sudoku serves as a practical example in combinatorics, discrete mathematics, and computer science for studying search algorithms, constraint propagation, and computational complexity.
 
+# Sudoku valid & Solver
+- **is-valid** essentially is identical to is valid leet-code problem 
+- **solver** essentially will solve a 9 x 9 sudoku grid
+
+
+# m-coloring problem
+The 𝑚-coloring problem is a classical problem in graph theory that asks whether the vertices of a graph can be colored using at most 𝑚 
+colors such that no two adjacent vertices share the same color. Originating from studies of map coloring and the famous Four Color Theorem, the problem plays a central role in combinatorics and discrete optimization.
+It can be formulated as a constraint satisfaction problem where each vertex represents a variable and adjacency relationships impose coloring constraints.
+The 𝑚 -coloring problem has important applications in scheduling, register allocation in compilers, frequency assignment in communication networks, and resource allocation systems. Due to its computational difficulty and NP-completeness for general graphs, it is commonly used to study backtracking, branch-and-bound methods, and heuristic search algorithms in computer science.
+
+- **is_colorable** essentially checks if we can color the graph
+- **color-graph** essentially finds a all solutions given a graph
+
+- **proofs posted in discussions :) :)**
 
 
 
