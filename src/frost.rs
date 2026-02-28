@@ -13,6 +13,11 @@
 
 use std::*;
 use std::collections::{HashSet,HashMap};
+use rand::seq::SliceRandom;
+use rand::rng;
+use rand::SeedableRng;
+use rand::rngs::StdRng;
+use rand::random_range;
 
 pub struct CoinChange{
     pub coins : Vec<usize>,
@@ -153,21 +158,145 @@ impl STB{
             n_sided
         }
     }
-    
-    
-    pub fn max_error(self,choices: Vec<i32>) -> i32{
-        0
+
+    fn get_expectation(&self) -> Vec<f32>{
+        let a : f32 = 1.0;
+        let b : f32 = self.n_sided as f32;
+        let d : f32 = ((a + b) / 2.0);
+        let d_add : f32 = (2.0 * d);
+
+        println!(" Expected Value of N-Die {:?}", d);
+        println!(" Expected Value of N-Die Sum {:?}",d_add);
+
+        vec![d,d_add]
+
     }
     
-    pub fn get_expectation(self) -> i32{
-        0
+    fn make_cards(&self) -> Vec<i32>{
+        let mut n : i32 = self.n_sided as i32;
+        let mut max_card : i32 = (n * 2);
+        let mut c : i32 = 1;
+        let mut cards : Vec<i32> = vec![];
+        while c != max_card + 1{
+            cards.push(c);
+            c += 1;
+        }
+        cards
+    }
+
+    fn cartesian_product(&self) -> Vec<Vec<i32>>{
+        let n : i32 = self.n_sided as i32 + 1;
+        let mut c_products : Vec<Vec<i32>> = Vec::new();
+        for i in 1..n{
+            for j in 1..n{
+                let prod : Vec<i32> = vec![i,j,i + j];
+                c_products.push(prod);
+            }
+        }
+        c_products
+    }
+
+    fn die(&self) -> Vec<i32>{
+        let n : i32 = (self.n_sided as i32) + 1;
+        let d1 = random_range(1..n);
+        let d2 = random_range(1..n);
+        let sum = d1 + d2;
+        vec![d1,d2,sum]
     }
     
-    pub fn make_cards(self) -> Vec<i32>{
+    fn goal(&self) -> i32{
+        let mut n : i32 = self.n_sided as i32;
+        let G = (n * (n + 1)) / 2;
+        G
+        // Faulhaber's Trick
+    }
+    
+    pub fn stb_tree(&self) -> Vec<Vec<i32>>{
+        
+        let G = self.goal();
+        let mut cards = self.make_cards();
+        let mut curr_sum : i32 = 0;
+        let mut game_paths : Vec<Vec<i32>> = vec![];
+        
+        
+        fn dfs(curr : i32, goal : i32, curr_cards : &mut Vec<i32> , curr_path : &mut Vec<i32> , paths : &mut Vec<Vec<i32>>, cart_product : &Vec<Vec<i32>>, prev:i32) -> (){
+            
+            if goal == 0{ // terminating state E_G
+                paths.push(curr_path.clone());
+                return 
+            }
+            
+            for tup in cart_product{ // 
+                // we can just do the three dfs calls 
+                let x = tup[0];
+                let y = tup[1];
+                let z = tup[2]; // z = x + y
+                
+                // we need to add termination branch when G is in the options
+                // most probable strategy from analysis is x + y
+                
+                // avoiding cycles , 1st part of strategy
+                
+                
+                if x == prev{
+                    ()
+                }else{
+                    
+                    dfs()
+                }
+                if y == prev{
+                    ()
+                    
+                }else{
+                    dfs()
+                }
+                
+                if z == prev{
+                    ()
+                }else{
+                    dfs()
+                }
+                
+
+                
+                
+            }
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+        }
+        
+        
+        
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         vec![]
-    }
-    
-    pub fn dfs(self) -> (){
+        
+        
         
     }
     
@@ -189,16 +318,6 @@ impl STB{
         drop(inst);
     }
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
 }
 

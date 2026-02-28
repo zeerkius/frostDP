@@ -14,10 +14,12 @@
 
 mod frost;
 use frost::CoinChange;
+use frost::STB;
+
 
 fn main() {
-    let c = CoinChange::new(vec![1,2,5],10);
-    let res =  c.k_resources(7);
+    let c = STB::new(6);
+    let res =  c.goal();
     
     println!(" values {:?}",res);
     
