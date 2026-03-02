@@ -237,6 +237,14 @@ impl STB{
                 
                 // avoiding cycles , 1st part of strategy
                 
+                let g_ref : &i32 = &goal;
+                
+                if curr_cards.contains(g_ref){
+                    // take goal to terminate the game
+                    ()
+                    
+                }
+                
                 
                 if x == prev{
                     ()
