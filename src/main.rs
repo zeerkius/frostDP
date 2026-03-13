@@ -18,9 +18,9 @@ use frost::STB;
 
 
 fn main() {
-    let c = STB::new(6);
-    let res =  c.goal();
-    
+    let sim = STB::new(6,3);
+    let res = sim.stb_tree_bruteforce();
+
     println!(" values {:?}",res);
     
     

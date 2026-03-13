@@ -19,6 +19,7 @@ use rand::SeedableRng;
 use rand::rngs::StdRng;
 use rand::random_range;
 
+
 pub struct CoinChange{
     pub coins : Vec<usize>,
     pub T : i32
@@ -148,184 +149,219 @@ impl CoinChange {
 
 
 pub struct STB{
-    n_sided : usize
+    m_die : usize,
+    n_sided : usize,
+    faced_up : bool
 }
 
 
 impl STB{
-    pub fn new(n_sided : usize) -> Self{
-        Self{
-            n_sided
+    pub fn new(n_sided : usize, m_die : usize, faced_up : bool) -> Result<Self, String> {
+        if n_sided <= 2 || m_die <= 2 {
+            return Err(" Either m or n is less than 2".to_string());
         }
+        Ok(Self { n_sided, m_die, faced_up })
     }
 
-    fn get_expectation(&self) -> Vec<f32>{
-        let a : f32 = 1.0;
-        let b : f32 = self.n_sided as f32;
-        let d : f32 = ((a + b) / 2.0);
-        let d_add : f32 = (2.0 * d);
 
-        println!(" Expected Value of N-Die {:?}", d);
-        println!(" Expected Value of N-Die Sum {:?}",d_add);
-
-        vec![d,d_add]
-
+    pub fn get_expectation(&self) -> Vec<f32>{
+        
+        let n : f32 = self.m_die as f32;
+        
+        let a: i32 = 1;
+        let b: i32 = self.n_sided as i32;
+        let mean : f32 = ((a + b) / 2) as f32;
+        let sum_mean : f32 = (n * mean);
+        
+        println!(" Single Die Expected Value  {:?}",mean);
+        println!(" Sum Die Expected Value {:?}", sum_mean);
+        
+        vec![mean,sum_mean]
     }
     
-    fn make_cards(&self) -> Vec<i32>{
-        let mut n : i32 = self.n_sided as i32;
-        let mut max_card : i32 = (n * 2);
-        let mut c : i32 = 1;
+    pub fn make_cards(&self) -> Vec<i32> {
         let mut cards : Vec<i32> = vec![];
-        while c != max_card + 1{
-            cards.push(c);
-            c += 1;
+        let n : i32 = (self.n_sided + 1) as i32;
+        for card in 1..n{
+            cards.push(card);
         }
         cards
+        
     }
-
-    fn cartesian_product(&self) -> Vec<Vec<i32>>{
-        let n : i32 = self.n_sided as i32 + 1;
-        let mut c_products : Vec<Vec<i32>> = Vec::new();
-        for i in 1..n{
-            for j in 1..n{
-                let prod : Vec<i32> = vec![i,j,i + j];
-                c_products.push(prod);
+    
+    pub fn simulate_die(&self) -> Vec<i32>{
+        let m : i32 = (self.m_die + 1) as i32;
+        let n : i32 = self.n_sided  as i32;
+        let mut die_trials : Vec<i32> = vec![];
+        
+        for trials in 1..m{
+            let res : i32 = random_range(1..n);
+            die_trials.push(res);
+        }
+        let sum : i32 = die_trials.iter().sum();
+        die_trials.push(sum);
+        
+        
+        die_trials
+        
+    }
+    
+    pub fn goal(&self) -> i32{
+        let n : i32 = self.n_sided as i32;
+        let sum : i32 = (n * (n + 1)) / 2;
+        sum
+        
+    }
+    
+    pub fn cartesian_power(&self) -> Vec<Vec<i32>>{
+        let n : i32 = self.n_sided as i32;
+        let m : i32 = self.m_die as i32;
+        
+        let mut res : Vec<Vec<i32>> = vec![];
+        let mut curr : Vec<i32> = Vec::with_capacity(m as usize);
+        
+        fn dfs(n : i32 , m : i32 , current : &mut Vec<i32>,result : &mut Vec<Vec<i32>>,){
+            if current.len() == m as usize{
+                result.push(current.clone());
+                return
+            }
+            for i in 1..=n {
+                current.push(i);
+                dfs(n, m, current, result);
+                current.pop();
             }
         }
-        c_products
-    }
+        
+        dfs(n,m,&mut curr,&mut res);
+        
+        res
+        }
+    
+    pub fn options(&self,parent: i32) -> (Vec<i32> , HashMap<i32,i32>){
+        let cartesian_power = self.cartesian_power();
+        
+        let mut paths : Vec<i32> = vec![];
+        
+        let length : usize = cartesian_power.len();
+        let inner_length: usize = cartesian_power[0].len();
+        let mut frequency_map : HashMap<i32,i32> = HashMap::new();
+        
+        for i in 0..length{
+            for j in 0..inner_length{
+                if self.faced_up == true{
+                    paths.push(-cartesian_power[i][j]); // we can only flip down
+                    *frequency_map.entry(-cartesian_power[i][j]).or_insert(0) += 1;
+                    
+                }else{
+                    paths.push(cartesian_power[i][j]); // we can only flip up
+                    *frequency_map.entry(cartesian_power[i][j]).or_insert(0) += 1;
+                }
 
-    fn die(&self) -> Vec<i32>{
-        let n : i32 = (self.n_sided as i32) + 1;
-        let d1 = random_range(1..n);
-        let d2 = random_range(1..n);
-        let sum = d1 + d2;
-        vec![d1,d2,sum]
-    }
-    
-    fn goal(&self) -> i32{
-        let mut n : i32 = self.n_sided as i32;
-        let G = (n * (n + 1)) / 2;
-        G
-        // Faulhaber's Trick
-    }
-    
-    pub fn stb_tree(&self) -> Vec<Vec<i32>>{
-        
-        let G = self.goal();
-        let mut cards = self.make_cards();
-        let mut curr_sum : i32 = 0;
-        let mut game_paths : Vec<Vec<i32>> = vec![];
-        
-        
-        fn dfs(curr : i32, goal : i32, curr_cards : &mut Vec<i32> , curr_path : &mut Vec<i32> , paths : &mut Vec<Vec<i32>>, cart_product : &Vec<Vec<i32>>, prev:i32) -> (){
-            
-            if goal == 0{ // terminating state E_G
-                paths.push(curr_path.clone());
-                return 
             }
-            
-            for tup in cart_product{ // 
-                // we can just do the three dfs calls 
-                let x = tup[0];
-                let y = tup[1];
-                let z = tup[2]; // z = x + y
-                
-                // we need to add termination branch when G is in the options
-                // most probable strategy from analysis is x + y
-                
-                // avoiding cycles , 1st part of strategy
-                
-                let g_ref : &i32 = &goal;
-                
-                if curr_cards.contains(g_ref){
-                    // take goal to terminate the game
-                    ()
-                    
-                }
-                
-                
-                if x == prev{
-                    ()
-                }else{
-                    
-                    dfs()
-                }
-                if y == prev{
-                    ()
-                    
-                }else{
-                    dfs()
-                }
-                
-                if z == prev{
-                    ()
-                }else{
-                    dfs()
-                }
-                
+        }
+        (paths,frequency_map)
+        
+    }
+    
+    pub fn sieve_options(&self,curr:Vec<i32>,prev) -> Vec<i32>{
+        
+        
+    }
+    
 
+    
+    pub fn stb_tree_bruteforce(&self)  -> f32{
+        
+        
+        
+        
+        
+        
+        if self.faced_up == true{
+            
+            
+            
+            
+            let goal : i32 = self.goal();
+            let curr : i32 = goal;
+            let game_paths : Vec<Vec<i32>> = vec![];
+            let parent : Vec<i32> = vec![0];
+            
+            
+            fn validate(){
+                
+                
                 
                 
             }
             
+            fn dfs(curr : i32, path: &mut Vec<i32>,game_paths : &mut Vec<Vec<i32>> , prev : i32) -> Vec<i32>{
+                if curr == 0{
+                    game_paths.push(path.clone());
+                    return;
+                }
+                
+
+
+
+
+
+
+
+
+
+            }
             
+        }else{
             
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+            fn validate(){
+                
+                
+                
+                
+                
+            }
+            let goal : i32 = self.goal();
+            let curr : i32 = goal;
+            let game_paths : Vec<Vec<i32>> = vec![];
+            let initial_prev : i32 = 0;
             
         }
         
         
         
+        
 
         
         
         
         
-        
-        
-        
-        
-        
-        
-        
-        vec![]
+    }
+
+
+
+
+
+    fn stb_tree_optimal() -> (){
+        ()
+    }
+    
+    
+    
+    
+    fn stb_simulation(&self,strat:bool) -> f32{
+        0.0
         
         
         
     }
     
     
-    pub fn dfs_strat(self) -> (){
-        
-        
-        
-    }
-    
-    
-    
-    
-    
-    
-    
-    
-    pub fn end(self, inst: STB) -> (){
-        drop(inst);
-    }
     
 
+
+pub fn end(self, inst: STB) -> () {
+    drop(inst);
+    }
 }
 
