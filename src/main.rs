@@ -18,12 +18,8 @@ use frost::STB;
 
 
 fn main() {
-    let sim = STB::new(6,3);
+    let sim = STB::new(2,2,true).unwrap();
     let res = sim.stb_tree_bruteforce();
-
-    println!(" values {:?}",res);
-    
-    
-    
+    println!("game paths {:?}",res);
     
 }
