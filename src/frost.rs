@@ -18,6 +18,7 @@ use rand::rng;
 use rand::SeedableRng;
 use rand::rngs::StdRng;
 use rand::random_range;
+use std::*;
 
 
 pub struct CoinChange{
@@ -207,8 +208,9 @@ impl STB{
     }
     
     pub fn goal(&self) -> i32{
-        let n : i32 = self.n_sided as i32;
-        let sum : i32 = (n * (n + 1)) / 2;
+        let n : i32 = (self.n_sided as i32) * (self.m_die as i32);
+        let mut sum : i32 = n * (n + 1);
+        sum = sum / 2;
         sum
         
     }
@@ -234,11 +236,19 @@ impl STB{
         
         dfs(n,m,&mut curr,&mut res);
         
+        let length : usize = res.len();
+        
+        for i in 0..length{
+            let s : i32 = res[i].iter().sum();
+            res[i].push(s);
+        }
+        
         res
         }
     
     pub fn options(&self) -> Vec<i32>{
         let cartesian_power = self.cartesian_power();
+        
         
         let mut paths : Vec<i32> = vec![];
         
@@ -251,104 +261,83 @@ impl STB{
             for j in 0..inner_length {
                 paths.push(-cartesian_power[i][j]); // we can only flip down
             }
+            
         }
         paths
         
     }
     
     
-    pub fn stb_tree_bruteforce(&self) -> Vec<Vec<i32>>{
-        
+    pub fn stb_tree_bruteforce(&self) -> Vec<Vec<i32>> {
+
         // goal is the sum of integers from [1,...,mn]
         // we will subtract from the goal repeatedly until the value is exactly zero
-        
-        let goal : i32 = self.goal();
-        let mut curr : i32 = goal;
-        
-        // keeping track of all game paths
-        
-        let mut game_paths : Vec<Vec<i32>> = vec![];
-        
-        // all possible options in the game tree
-        
-        let mut game_options : Vec<i32> = self.options();
-        
-        // this helps us control the flow such that we don't have any infinite games
-         
-        let mut parent : Vec<i32> = vec![0,0];
-        let mut current_path : Vec<i32> = vec![];
 
-        
-        fn validate(curr_choices : &mut Vec<i32> , parent : i32 , grand_parent : i32) -> () {
-            let n: usize = curr_choices.len();
+        let goal: i32 = self.goal();
+        let mut goal_ref : i32 = goal;
+
+        let mut game_sequences: Vec<Vec<i32>> = vec![];
+        let mut curr_options: Vec<i32> = self.options();
+        let mut curr_path: Vec<i32> = vec![];
+        let mut curr_parent: i32 = 0;
+        let length: usize = curr_options.len();
+
+        fn validate(curr: Vec<i32>, parent: i32) -> Vec<i32> {
+            let mut new: Vec<i32> = vec![];
+            let n: usize = curr.len();
             for i in 0..n {
-                if curr_choices[i] == 0{
-                    if grand_parent > 0 {
-                        curr_choices[i] = -grand_parent;
-                    } else {
-                        curr_choices[i] = grand_parent.abs();
-                    }
-                }
-                if curr_choices[i] == parent {
-                    curr_choices[i] = 0;
+                if curr[i] == parent {
+                    new.push(-curr[i]);
+                } else {
+                    new.push(curr[i]);
                 }
             }
+            new
         }
-
-        fn dfs(curr : i32, path: &mut Vec<i32>, game_paths : &mut Vec<Vec<i32>> , choices : &mut Vec<i32> , parent_vector :&mut Vec<i32>) ->(){
-            println!(" curr {:?} ",curr);
+        
+        fn detect_cycle(curr : Vec<Vec<i32>>) -> bool{ // use this function on all parent values and essentially,
+            // make every gam a graph and run cycle detection algorithim
+            
+            true
+        }
+        
+        
+        fn dfs(curr : i32, parent : i32 , path : Vec<i32> , game_seq : &mut Vec<Vec<i32>> , curr_options : Vec<i32> , options_length : usize) -> (){
+            
+            
+            
             if curr == 0{
-                game_paths.push(path.clone());
-                return;
+                game_seq.push(path.clone());
+                return 
             }
             
-            let n : usize = choices.len();
-            let m : usize = parent_vector.len();
             
-            let parent : i32 = parent_vector[m - 1];
-            let grand_parent : i32 = parent_vector[m - 2];
-            
-            
-            
-            for i in 0..n{
-                if choices[i] == 0{
-                    return;
-                    
+            for i in 0..options_length{
+                
+                
+                let curr_options = validate(curr_options.clone(),parent);
+                let length : usize = curr_options.len();
+                let curr_sum : i32 = curr + curr_options[i];
+                let curr_parent : i32  = curr_options[i];
+                let mut curr_path : Vec<i32> = path.clone();
+                curr_path.push(curr_options[i]);
+                if curr_options[i] == -parent{ // essentially we are only getting the perfect game , we either need this to have a global scope or ,use a hashset for cycle detection
+                    return
                 }else{
-                    println!(" path sums {:?}",path);
-                    validate(choices,parent,grand_parent);
-                    let path_sum : i32 = curr + choices[i];
-                    parent_vector.push(choices[i]);
-                    path.push(choices[i]);
-                    dfs(path_sum,path,game_paths,choices,parent_vector)
-                    
+                    dfs(curr_sum,curr_parent,curr_path,game_seq,curr_options,length);
                 }
                 
-
-                
-
-                    
-
-                
             }
-
-
         }
         
-        println!(" choices {:?}",game_options);
+        dfs(goal_ref,curr_parent,curr_path,&mut game_sequences,curr_options,length);
         
-        dfs(goal,&mut current_path,&mut game_paths,&mut game_options, &mut parent);
-        
-        
-        game_paths
-        
+        game_sequences
+
     }
 
 
-
-
-
-    fn stb_tree_optimal() -> (){
+    fn stb_tree_optimal() -> () {
         ()
     }
     
@@ -368,6 +357,7 @@ impl STB{
 
     pub fn end(self, inst: STB) -> () {
         drop(inst);
-        }
+        
     }
+}
 
