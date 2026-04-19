@@ -18,8 +18,21 @@ use frost::STB;
 
 
 fn main() {
-    let sim = STB::new(2,2,true).unwrap();
-    let res = sim.stb_tree_bruteforce();
-    println!("game paths {:?}",res);
+    let sim = STB::new(6,2).unwrap();
+
+    let cards = sim.make_cards();
+    
+    let die = sim.simulate_die();
+    
+    let goal = sim.goal();
+    
+    let possible = sim.cartesian_power();
+    
+    
+    println!("options {:?}",sim.stb_random());
+    
+    
+
+
     
 }

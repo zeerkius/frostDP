@@ -14,8 +14,7 @@
 use std::*;
 use std::collections::{HashSet,HashMap};
 use rand::seq::SliceRandom;
-use rand::rng;
-use rand::SeedableRng;
+use rand::{random_iter, SeedableRng};
 use rand::rngs::StdRng;
 use rand::random_range;
 use std::*;
@@ -150,53 +149,57 @@ impl CoinChange {
 
 
 pub struct STB{
-    m_die : usize,
-    n_sided : usize,
-    faced_up : bool
+    n_die : usize,
+    m_trials : usize
 }
+
+    
+    
+
 
 
 impl STB{
     
-    pub fn new(n_sided : usize, m_die : usize, faced_up : bool) -> Result<Self, String> {
-        if n_sided < 2 || m_die < 2 {
+    pub fn new(n_die : usize, m_trials : usize) -> Result<Self, String> {
+        if n_die < 2 || m_trials < 2 {
             return Err(" Either m or n is less than 2".to_string());
         }
-        Ok(Self { n_sided, m_die, faced_up })
+        Ok(Self {n_die, m_trials})
     }
     
     pub fn get_expectation(&self) -> Vec<f32>{
         
-        let n : f32 = self.m_die as f32;
+        let m : f32 = self.m_trials as f32;
         
         let a: i32 = 1;
-        let b: i32 = self.n_sided as i32;
-        let mean : f32 = ((a + b) / 2) as f32;
-        let sum_mean : f32 = (n * mean);
+        let b: i32 = self.n_die as i32;
+        let mean : f32 = ((a + b) as f32 / 2.0);
+        let sum_mean : f32 = (m * mean);
         
         println!(" Single Die Expected Value  {:?}",mean);
         println!(" Sum Die Expected Value {:?}", sum_mean);
-        
         vec![mean,sum_mean]
     }
     
     pub fn make_cards(&self) -> Vec<i32> {
         let mut cards : Vec<i32> = vec![];
-        let n : i32 = (self.n_sided + 1) as i32;
-        for card in 1..n{
-            cards.push(card);
+        let max_card : i32 = (self.n_die as i32) * (self.m_trials as i32);
+        for c in 1..=max_card{
+            cards.push(c);
         }
         cards
         
     }
     
     pub fn simulate_die(&self) -> Vec<i32>{
-        let m : i32 = (self.m_die + 1) as i32;
-        let n : i32 = self.n_sided  as i32;
+        let n : i32 = (self.n_die) as i32;
+        let m : i32 = self.m_trials  as i32;
         let mut die_trials : Vec<i32> = vec![];
         
-        for trials in 1..m{
-            let res : i32 = random_range(1..n);
+        let mut rng = rand::rng();
+        
+        for trials in 1..=m{
+            let res  : i32 = random_range(1..=n);
             die_trials.push(res);
         }
         let sum : i32 = die_trials.iter().sum();
@@ -208,16 +211,17 @@ impl STB{
     }
     
     pub fn goal(&self) -> i32{
-        let n : i32 = (self.n_sided as i32) * (self.m_die as i32);
-        let mut sum : i32 = n * (n + 1);
+        // faulhaber's
+        let max : i32 = (self.n_die as i32) * (self.m_trials as i32);
+        let mut sum : i32 = max * (max + 1);
         sum = sum / 2;
         sum
         
     }
     
     pub fn cartesian_power(&self) -> Vec<Vec<i32>>{
-        let n : i32 = self.n_sided as i32;
-        let m : i32 = self.m_die as i32;
+        let n : i32 = self.n_die as i32;
+        let m : i32 = self.m_trials as i32;
         
         let mut res : Vec<Vec<i32>> = vec![];
         let mut curr : Vec<i32> = Vec::with_capacity(m as usize);
@@ -246,111 +250,102 @@ impl STB{
         res
         }
     
-    pub fn options(&self) -> Vec<i32>{
-        let cartesian_power = self.cartesian_power();
+    pub fn create_flip_map(&self) -> HashMap<i32,i32>{
+        let cards = self.make_cards();
+        let mut game_h : HashMap<i32,i32> = HashMap::new();
+        
+        for c in cards{
+            game_h.insert(c,1); //   1 -> flipped up , 0 -> flipped down
+        }
+        game_h
+    }
+    
+    pub fn create_hashmap(&self) -> HashMap<i32,i32>{
+        let cards = self.make_cards();
+        let mut game_h : HashMap<i32,i32> = HashMap::new();
+    
+        for c in cards{
+        game_h.insert(c,0);
+        }
+        game_h
+    }
+    
+    pub fn stb_random(&self) -> (){
+        
+        let mut game_sequence : Vec<i32> = vec![];
+        let mut integer_history_map = self.create_hashmap();
+        let mut card_state_map = self.create_flip_map();
+        let mut goal = self.goal();
+        let mut game_step : i32 = 0;
         
         
-        let mut paths : Vec<i32> = vec![];
-        
-        let length : usize = cartesian_power.len();
-        let inner_length: usize = cartesian_power[0].len();
-        
-        // fix cartesian power / options function
-        
-        for i in 0..length{
-            for j in 0..inner_length {
-                paths.push(-cartesian_power[i][j]); // we can only flip down
+        while goal != 0{
+            
+            let mut actions = self.simulate_die();
+            
+            // random choice strat
+            
+            let actions_length : i32 = actions.len() as i32;
+            let random_choice = actions[random_range(0..actions_length) as usize];
+            
+            fn validate(actions : &mut Vec<i32> , fm : &mut HashMap<i32,i32> , gh:&mut HashMap<i32,i32> , ca : i32 , goal : &mut i32) -> (){
+                let mut actions_ref = ca.clone();
+                if *fm.get(&actions_ref).unwrap() == 1 {  // flipped up , ie only valid actions is to flip it down (corresponds with -A)
+                    fm.insert(actions_ref,0); // flip card state (ie overwriting fm)
+                    actions_ref = -ca; // (-A)
+                    *gh.entry(actions_ref).or_insert(0) += 1; // (number of occurences of each integer)
+                    *goal += actions_ref;  // updating game goal adding as values gaurenteed to be negative
+                    
+                }else{ // flipped down , ie only valid action is to flip up (corresponds with +A)
+                    fm.insert(actions_ref,1); // flip card state (ie overwriting fm)
+                    actions_ref = ca; // (+A)
+                    *gh.entry(actions_ref).or_insert(0) += 1; // (number of occurences of each integer)
+                    *goal += actions_ref;  // updating game goal adding as values gaurenteed to be positive
+                }
+                
             }
+            validate(&mut actions,&mut card_state_map,&mut integer_history_map,random_choice,&mut goal);
+            game_step += 1;
+            
+
+            
+            let state_string = format!("Game Step {} , \n card game_state {:?} ,\n  actions {:?} ,\n chosen_actions {} ,\n goal {}", game_step,card_state_map,actions,random_choice,goal);
+            println!("\n {:?}", state_string);
             
         }
-        paths
+        
+
+        
+        
+        
+
+
+
+
+        
+        
+        
+        
+        
+        
+        
+        
         
     }
     
     
-    pub fn stb_tree_bruteforce(&self) -> Vec<Vec<i32>> {
-
-        // goal is the sum of integers from [1,...,mn]
-        // we will subtract from the goal repeatedly until the value is exactly zero
-
-        let goal: i32 = self.goal();
-        let mut goal_ref : i32 = goal;
-
-        let mut game_sequences: Vec<Vec<i32>> = vec![];
-        let mut curr_options: Vec<i32> = self.options();
-        let mut curr_path: Vec<i32> = vec![];
-        let mut curr_parent: i32 = 0;
-        let length: usize = curr_options.len();
-
-        fn validate(curr: Vec<i32>, parent: i32) -> Vec<i32> {
-            let mut new: Vec<i32> = vec![];
-            let n: usize = curr.len();
-            for i in 0..n {
-                if curr[i] == parent {
-                    new.push(-curr[i]);
-                } else {
-                    new.push(curr[i]);
-                }
-            }
-            new
-        }
-        
-        fn detect_cycle(curr : Vec<Vec<i32>>) -> bool{ // use this function on all parent values and essentially,
-            // make every gam a graph and run cycle detection algorithim
-            
-            true
-        }
-        
-        
-        fn dfs(curr : i32, parent : i32 , path : Vec<i32> , game_seq : &mut Vec<Vec<i32>> , curr_options : Vec<i32> , options_length : usize) -> (){
-            
-            
-            
-            if curr == 0{
-                game_seq.push(path.clone());
-                return 
-            }
-            
-            
-            for i in 0..options_length{
-                
-                
-                let curr_options = validate(curr_options.clone(),parent);
-                let length : usize = curr_options.len();
-                let curr_sum : i32 = curr + curr_options[i];
-                let curr_parent : i32  = curr_options[i];
-                let mut curr_path : Vec<i32> = path.clone();
-                curr_path.push(curr_options[i]);
-                if curr_options[i] == -parent{ // essentially we are only getting the perfect game , we either need this to have a global scope or ,use a hashset for cycle detection
-                    return
-                }else{
-                    dfs(curr_sum,curr_parent,curr_path,game_seq,curr_options,length);
-                }
-                
-            }
-        }
-        
-        dfs(goal_ref,curr_parent,curr_path,&mut game_sequences,curr_options,length);
-        
-        game_sequences
-
-    }
-
-
-    fn stb_tree_optimal() -> () {
+    fn stb_optimal() -> () {
         ()
     }
     
+    fn stb_MDP() -> () {()}
     
     
     
-    fn stb_simulation(&self,strat:bool) -> f32{
-        0.0
-        
-        
-        
-    }
     
+    fn stb_bellman() -> () {()}
+    
+    fn stb_SS() -> () {()}
     
     
 
