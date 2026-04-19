@@ -167,7 +167,7 @@ impl STB{
         Ok(Self {n_die, m_trials})
     }
     
-    pub fn get_expectation(&self) -> Vec<f32>{
+    fn get_expectation(&self) -> Vec<f32>{
         
         let m : f32 = self.m_trials as f32;
         
@@ -181,7 +181,7 @@ impl STB{
         vec![mean,sum_mean]
     }
     
-    pub fn make_cards(&self) -> Vec<i32> {
+    fn make_cards(&self) -> Vec<i32> {
         let mut cards : Vec<i32> = vec![];
         let max_card : i32 = (self.n_die as i32) * (self.m_trials as i32);
         for c in 1..=max_card{
@@ -191,7 +191,7 @@ impl STB{
         
     }
     
-    pub fn simulate_die(&self) -> Vec<i32>{
+    fn simulate_die(&self) -> Vec<i32>{
         let n : i32 = (self.n_die) as i32;
         let m : i32 = self.m_trials  as i32;
         let mut die_trials : Vec<i32> = vec![];
@@ -210,7 +210,7 @@ impl STB{
         
     }
     
-    pub fn goal(&self) -> i32{
+    fn goal(&self) -> i32{
         // faulhaber's
         let max : i32 = (self.n_die as i32) * (self.m_trials as i32);
         let mut sum : i32 = max * (max + 1);
@@ -219,7 +219,7 @@ impl STB{
         
     }
     
-    pub fn cartesian_power(&self) -> Vec<Vec<i32>>{
+    fn cartesian_power(&self) -> Vec<Vec<i32>>{
         let n : i32 = self.n_die as i32;
         let m : i32 = self.m_trials as i32;
         
@@ -250,7 +250,7 @@ impl STB{
         res
         }
     
-    pub fn create_flip_map(&self) -> HashMap<i32,i32>{
+    fn create_flip_map(&self) -> HashMap<i32,i32>{
         let cards = self.make_cards();
         let mut game_h : HashMap<i32,i32> = HashMap::new();
         
@@ -260,7 +260,7 @@ impl STB{
         game_h
     }
     
-    pub fn create_hashmap(&self) -> HashMap<i32,i32>{
+    fn create_hashmap(&self) -> HashMap<i32,i32>{
         let cards = self.make_cards();
         let mut game_h : HashMap<i32,i32> = HashMap::new();
     
@@ -333,8 +333,7 @@ impl STB{
         
     }
     
-    
-    fn stb_optimal() -> () {
+    pub fn stb_optimal() -> () {
         ()
     }
     
