@@ -270,7 +270,7 @@ impl STB{
         game_h
     }
     
-    pub fn stb_random(&self) -> (){
+    pub fn stb_random(&self) ->(){
         
         let mut game_sequence : Vec<i32> = vec![];
         let mut integer_history_map = self.create_hashmap();
@@ -313,45 +313,242 @@ impl STB{
             println!("\n {:?}", state_string);
             
         }
-        
 
-        
-        
-        
-
-
-
-
-        
-        
-        
-        
-        
-        
-        
-        
         
     }
     
-    pub fn stb_optimal() -> () {
-        ()
+    pub fn stb_max(&self) ->(){
+
+        let mut game_sequence: Vec<i32> = vec![];
+        let mut integer_history_map = self.create_hashmap();
+        let mut card_state_map = self.create_flip_map();
+        let mut goal = self.goal();
+        let mut game_step: i32 = 0;
+
+
+        while goal != 0 {
+            let mut actions = self.simulate_die();
+
+            // optimal strat ~ max choice
+
+            let mut optimal_choice = *actions.iter().max().unwrap();
+
+
+            let chosen_action = optimal_choice;
+
+            fn validate(actions: &mut Vec<i32>, fm: &mut HashMap<i32, i32>, gh: &mut HashMap<i32, i32>, ca: i32, goal: &mut i32) -> () {
+                let mut actions_ref = ca;
+                if *fm.get(&actions_ref).unwrap() == 1 {  // flipped up , ie only valid actions is to flip it down (corresponds with -A)
+                    fm.insert(actions_ref, 0); // flip card state (ie overwriting fm)
+                    actions_ref = -ca; // (-A)
+                    *gh.entry(actions_ref).or_insert(0) += 1; // (number of occurences of each integer)
+                    *goal += actions_ref;  // updating game goal adding as values gaurenteed to be negative
+
+                } else { // flipped down , ie only valid action is to flip up (corresponds with +A)
+                    fm.insert(actions_ref, 1); // flip card state (ie overwriting fm)
+                    actions_ref = ca; // (+A)
+                    *gh.entry(actions_ref).or_insert(0) += 1; // (number of occurences of each integer)
+                    *goal += actions_ref;  // updating game goal adding as values gaurenteed to be positive
+                }
+            }
+            validate(&mut actions, &mut card_state_map, &mut integer_history_map, chosen_action, &mut goal);
+            game_step += 1;
+
+
+            let state_string = format!("Game Step {} , \n card game_state {:?} ,\n  actions {:?} ,\n chosen_actions {} ,\n goal {}", game_step, card_state_map, actions, chosen_action, goal);
+            println!("\n {:?}", state_string);
+        }
+
+        fn stb_MDP() -> () { () }
+
+        fn stb_bellman() -> () { () }
+
+        fn stb_SS() -> () { () }
+
+        pub fn end(inst: STB) -> () {
+            drop(inst);
+        }
     }
     
-    fn stb_MDP() -> () {()}
-    
-    
-    
-    
-    fn stb_bellman() -> () {()}
-    
-    fn stb_SS() -> () {()}
-    
-    
+    pub fn stb_min(&self) ->(){
+        let mut game_sequence: Vec<i32> = vec![];
+        let mut integer_history_map = self.create_hashmap();
+        let mut card_state_map = self.create_flip_map();
+        let mut goal = self.goal();
+        let mut game_step: i32 = 0;
 
 
-    pub fn end(self, inst: STB) -> () {
-        drop(inst);
+        while goal != 0 {
+            let mut actions = self.simulate_die();
+
+            // optimal strat ~ max choice
+
+            let mut optimal_choice = *actions.iter().min().unwrap();
+
+
+            let chosen_action = optimal_choice;
+
+            fn validate(actions: &mut Vec<i32>, fm: &mut HashMap<i32, i32>, gh: &mut HashMap<i32, i32>, ca: i32, goal: &mut i32) -> () {
+                let mut actions_ref = ca;
+                if *fm.get(&actions_ref).unwrap() == 1 {  // flipped up , ie only valid actions is to flip it down (corresponds with -A)
+                    fm.insert(actions_ref, 0); // flip card state (ie overwriting fm)
+                    actions_ref = -ca; // (-A)
+                    *gh.entry(actions_ref).or_insert(0) += 1; // (number of occurences of each integer)
+                    *goal += actions_ref;  // updating game goal adding as values gaurenteed to be negative
+
+                } else { // flipped down , ie only valid action is to flip up (corresponds with +A)
+                    fm.insert(actions_ref, 1); // flip card state (ie overwriting fm)
+                    actions_ref = ca; // (+A)
+                    *gh.entry(actions_ref).or_insert(0) += 1; // (number of occurences of each integer)
+                    *goal += actions_ref;  // updating game goal adding as values gaurenteed to be positive
+                }
+            }
+            validate(&mut actions, &mut card_state_map, &mut integer_history_map, chosen_action, &mut goal);
+            game_step += 1;
+
+
+            let state_string = format!("Game Step {} , \n card game_state {:?} ,\n  actions {:?} ,\n chosen_actions {} ,\n goal {}", game_step, card_state_map, actions, chosen_action, goal);
+            println!("\n {:?}", state_string);
+        }
+    }
+    
+    pub fn stb_median_single_die(&self) ->() {
         
+        let mut game_sequence: Vec<i32> = vec![];
+        let mut integer_history_map = self.create_hashmap();
+        let mut card_state_map = self.create_flip_map();
+        let mut goal = self.goal();
+        let mut game_step: i32 = 0;
+
+
+        while goal != 0 {
+            let mut actions = self.simulate_die();
+
+            let median = self.get_expectation();
+            let single_median = median[0];
+
+            fn get_error(actions: &Vec<i32>, sm: f32) -> usize {
+                fn sse(a: i32, b: f32) -> i32 {
+                    let c = b as i32;
+                    let err: i32 = (a - c).pow(2);
+                    err
+                }
+                let mut min_index : usize = 0;
+
+                let mut err: Vec<i32> = vec![];
+                for i in 0..actions.len() {
+                    err.push(sse(actions[i], sm));
+                }
+                let min_err: i32 = *err.iter().min().unwrap();
+                for j in 0..err.len() {
+                    if err[j] == min_err {
+                        min_index = j;
+                    }
+                }
+                min_index
+                
+            }
+            
+
+            // optimal strat ~ max choice
+
+            let mut optimal_choice = actions[get_error(&actions,single_median)];
+            
+            let chosen_action = optimal_choice;
+
+            fn validate(actions: &mut Vec<i32>, fm: &mut HashMap<i32, i32>, gh: &mut HashMap<i32, i32>, ca: i32, goal: &mut i32) -> () {
+                let mut actions_ref = ca;
+                if *fm.get(&actions_ref).unwrap() == 1 {  // flipped up , ie only valid actions is to flip it down (corresponds with -A)
+                    fm.insert(actions_ref, 0); // flip card state (ie overwriting fm)
+                    actions_ref = -ca; // (-A)
+                    *gh.entry(actions_ref).or_insert(0) += 1; // (number of occurences of each integer)
+                    *goal += actions_ref;  // updating game goal adding as values gaurenteed to be negative
+
+                } else { // flipped down , ie only valid action is to flip up (corresponds with +A)
+                    fm.insert(actions_ref, 1); // flip card state (ie overwriting fm)
+                    actions_ref = ca; // (+A)
+                    *gh.entry(actions_ref).or_insert(0) += 1; // (number of occurences of each integer)
+                    *goal += actions_ref;  // updating game goal adding as values gaurenteed to be positive
+                }
+            }
+            validate(&mut actions, &mut card_state_map, &mut integer_history_map, chosen_action, &mut goal);
+            game_step += 1;
+
+
+            let state_string = format!("Game Step {} , \n card game_state {:?} ,\n  actions {:?} ,\n chosen_actions {} ,\n goal {}", game_step, card_state_map, actions, chosen_action, goal);
+            println!("\n {:?}", state_string);
+        }
     }
+
+    pub fn stb_median_sum_die(&self) ->() {
+
+        let mut game_sequence: Vec<i32> = vec![];
+        let mut integer_history_map = self.create_hashmap();
+        let mut card_state_map = self.create_flip_map();
+        let mut goal = self.goal();
+        let mut game_step: i32 = 0;
+
+
+        while goal != 0 {
+            let mut actions = self.simulate_die();
+
+            let median = self.get_expectation();
+            let single_median = median[1];
+
+            fn get_error(actions: &Vec<i32>, sm: f32) -> usize {
+                fn sse(a: i32, b: f32) -> i32 {
+                    let c = b as i32;
+                    let err: i32 = (a - c).pow(2);
+                    err
+                }
+                let mut min_index : usize = 0;
+
+                let mut err: Vec<i32> = vec![];
+                for i in 0..actions.len() {
+                    err.push(sse(actions[i], sm));
+                }
+                let min_err: i32 = *err.iter().min().unwrap();
+                for j in 0..err.len() {
+                    if err[j] == min_err {
+                        min_index = j;
+                    }
+                }
+                min_index
+
+            }
+
+
+            // optimal strat ~ max choice
+
+            let mut optimal_choice = actions[get_error(&actions,single_median)];
+
+            let chosen_action = optimal_choice;
+
+            fn validate(actions: &mut Vec<i32>, fm: &mut HashMap<i32, i32>, gh: &mut HashMap<i32, i32>, ca: i32, goal: &mut i32) -> () {
+                let mut actions_ref = ca;
+                if *fm.get(&actions_ref).unwrap() == 1 {  // flipped up , ie only valid actions is to flip it down (corresponds with -A)
+                    fm.insert(actions_ref, 0); // flip card state (ie overwriting fm)
+                    actions_ref = -ca; // (-A)
+                    *gh.entry(actions_ref).or_insert(0) += 1; // (number of occurences of each integer)
+                    *goal += actions_ref;  // updating game goal adding as values gaurenteed to be negative
+
+                } else { // flipped down , ie only valid action is to flip up (corresponds with +A)
+                    fm.insert(actions_ref, 1); // flip card state (ie overwriting fm)
+                    actions_ref = ca; // (+A)
+                    *gh.entry(actions_ref).or_insert(0) += 1; // (number of occurences of each integer)
+                    *goal += actions_ref;  // updating game goal adding as values gaurenteed to be positive
+                }
+            }
+            validate(&mut actions, &mut card_state_map, &mut integer_history_map, chosen_action, &mut goal);
+            game_step += 1;
+
+
+            let state_string = format!("Game Step {} , \n card game_state {:?} ,\n  actions {:?} ,\n chosen_actions {} ,\n goal {}", game_step, card_state_map, actions, chosen_action, goal);
+            println!("\n {:?}", state_string);
+        }
+    }
+    
+    
+    
 }
 
