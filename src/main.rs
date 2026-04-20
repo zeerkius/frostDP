@@ -20,7 +20,7 @@ use frost::STB;
 fn main() {
     let sim = STB::new(6,2).unwrap();
     
-    println!(" {:?}",sim.stb_median_sum_die());
+    println!(" {:?}",sim.stb_prob_choice());
     
     
 

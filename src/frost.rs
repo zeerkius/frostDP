@@ -158,76 +158,71 @@ pub struct STB{
 
 
 
-impl STB{
-    
-    pub fn new(n_die : usize, m_trials : usize) -> Result<Self, String> {
+impl STB {
+    pub fn new(n_die: usize, m_trials: usize) -> Result<Self, String> {
         if n_die < 2 || m_trials < 2 {
             return Err(" Either m or n is less than 2".to_string());
         }
-        Ok(Self {n_die, m_trials})
+        Ok(Self { n_die, m_trials })
     }
-    
-    fn get_expectation(&self) -> Vec<f32>{
-        
-        let m : f32 = self.m_trials as f32;
-        
+
+    fn get_expectation(&self) -> Vec<f32> {
+        let m: f32 = self.m_trials as f32;
+
         let a: i32 = 1;
         let b: i32 = self.n_die as i32;
-        let mean : f32 = ((a + b) as f32 / 2.0);
-        let sum_mean : f32 = (m * mean);
-        
-        println!(" Single Die Expected Value  {:?}",mean);
+        let mean: f32 = ((a + b) as f32 / 2.0);
+        let sum_mean: f32 = (m * mean);
+
+        println!(" Single Die Expected Value  {:?}", mean);
         println!(" Sum Die Expected Value {:?}", sum_mean);
-        vec![mean,sum_mean]
+        vec![mean, sum_mean]
     }
-    
+
     fn make_cards(&self) -> Vec<i32> {
-        let mut cards : Vec<i32> = vec![];
-        let max_card : i32 = (self.n_die as i32) * (self.m_trials as i32);
-        for c in 1..=max_card{
+        let mut cards: Vec<i32> = vec![];
+        let max_card: i32 = (self.n_die as i32) * (self.m_trials as i32);
+        for c in 1..=max_card {
             cards.push(c);
         }
         cards
-        
     }
-    
-    fn simulate_die(&self) -> Vec<i32>{
-        let n : i32 = (self.n_die) as i32;
-        let m : i32 = self.m_trials  as i32;
-        let mut die_trials : Vec<i32> = vec![];
-        
+
+    fn simulate_die(&self) -> Vec<i32> {
+        let n: i32 = (self.n_die) as i32;
+        let m: i32 = self.m_trials as i32;
+        let mut die_trials: Vec<i32> = vec![];
+
         let mut rng = rand::rng();
-        
-        for trials in 1..=m{
-            let res  : i32 = random_range(1..=n);
+
+        for trials in 1..=m {
+            let res: i32 = random_range(1..=n);
             die_trials.push(res);
         }
-        let sum : i32 = die_trials.iter().sum();
+        let sum: i32 = die_trials.iter().sum();
         die_trials.push(sum);
-        
-        
+
+
         die_trials
-        
     }
-    
-    fn goal(&self) -> i32{
+
+    fn goal(&self) -> i32 {
         // faulhaber's
-        let max : i32 = (self.n_die as i32) * (self.m_trials as i32);
-        let mut sum : i32 = max * (max + 1);
+        let max: i32 = (self.n_die as i32) * (self.m_trials as i32);
+        let mut sum: i32 = max * (max + 1);
         sum = sum / 2;
         sum
-        
     }
-    
-    fn cartesian_power(&self) -> Vec<Vec<i32>>{
-        let n : i32 = self.n_die as i32;
-        let m : i32 = self.m_trials as i32;
-        
-        let mut res : Vec<Vec<i32>> = vec![];
-        let mut curr : Vec<i32> = Vec::with_capacity(m as usize);
-        
-        fn dfs(n : i32 , m : i32 , current : &mut Vec<i32>,result : &mut Vec<Vec<i32>>,){
-            if current.len() == m as usize{
+
+    fn cartesian_power(&self) -> Vec<Vec<i32>> {
+        let n: i32 = self.n_die as i32;
+        let m: i32 = self.m_trials as i32;
+
+        let mut res: Vec<Vec<i32>> = vec![];
+        let mut curr: Vec<i32> = Vec::with_capacity(m as usize);
+
+        fn dfs(n: i32, m: i32, current: &mut Vec<i32>, result: &mut Vec<Vec<i32>>, ) {
+            if current.len() == m as usize {
                 result.push(current.clone());
                 return
             }
@@ -237,88 +232,80 @@ impl STB{
                 current.pop();
             }
         }
-        
-        dfs(n,m,&mut curr,&mut res);
-        
-        let length : usize = res.len();
-        
-        for i in 0..length{
-            let s : i32 = res[i].iter().sum();
+
+        dfs(n, m, &mut curr, &mut res);
+
+        let length: usize = res.len();
+
+        for i in 0..length {
+            let s: i32 = res[i].iter().sum();
             res[i].push(s);
         }
-        
+
         res
-        }
-    
-    fn create_flip_map(&self) -> HashMap<i32,i32>{
+    }
+
+    fn create_flip_map(&self) -> HashMap<i32, i32> {
         let cards = self.make_cards();
-        let mut game_h : HashMap<i32,i32> = HashMap::new();
-        
-        for c in cards{
-            game_h.insert(c,1); //   1 -> flipped up , 0 -> flipped down
+        let mut game_h: HashMap<i32, i32> = HashMap::new();
+
+        for c in cards {
+            game_h.insert(c, 1); //   1 -> flipped up , 0 -> flipped down
         }
         game_h
     }
-    
-    fn create_hashmap(&self) -> HashMap<i32,i32>{
+
+    fn create_hashmap(&self) -> HashMap<i32, i32> {
         let cards = self.make_cards();
-        let mut game_h : HashMap<i32,i32> = HashMap::new();
-    
-        for c in cards{
-        game_h.insert(c,0);
+        let mut game_h: HashMap<i32, i32> = HashMap::new();
+
+        for c in cards {
+            game_h.insert(c, 0);
         }
         game_h
     }
-    
-    pub fn stb_random(&self) ->(){
-        
-        let mut game_sequence : Vec<i32> = vec![];
+
+    pub fn stb_random(&self) -> () {
+        let mut game_sequence: Vec<i32> = vec![];
         let mut integer_history_map = self.create_hashmap();
         let mut card_state_map = self.create_flip_map();
         let mut goal = self.goal();
-        let mut game_step : i32 = 0;
-        
-        
-        while goal != 0{
-            
+        let mut game_step: i32 = 0;
+
+
+        while goal != 0 {
             let mut actions = self.simulate_die();
-            
+
             // random choice strat
-            
-            let actions_length : i32 = actions.len() as i32;
+
+            let actions_length: i32 = actions.len() as i32;
             let random_choice = actions[random_range(0..actions_length) as usize];
-            
-            fn validate(actions : &mut Vec<i32> , fm : &mut HashMap<i32,i32> , gh:&mut HashMap<i32,i32> , ca : i32 , goal : &mut i32) -> (){
+
+            fn validate(actions: &mut Vec<i32>, fm: &mut HashMap<i32, i32>, gh: &mut HashMap<i32, i32>, ca: i32, goal: &mut i32) -> () {
                 let mut actions_ref = ca.clone();
                 if *fm.get(&actions_ref).unwrap() == 1 {  // flipped up , ie only valid actions is to flip it down (corresponds with -A)
-                    fm.insert(actions_ref,0); // flip card state (ie overwriting fm)
+                    fm.insert(actions_ref, 0); // flip card state (ie overwriting fm)
                     actions_ref = -ca; // (-A)
                     *gh.entry(actions_ref).or_insert(0) += 1; // (number of occurences of each integer)
                     *goal += actions_ref;  // updating game goal adding as values gaurenteed to be negative
-                    
-                }else{ // flipped down , ie only valid action is to flip up (corresponds with +A)
-                    fm.insert(actions_ref,1); // flip card state (ie overwriting fm)
+
+                } else { // flipped down , ie only valid action is to flip up (corresponds with +A)
+                    fm.insert(actions_ref, 1); // flip card state (ie overwriting fm)
                     actions_ref = ca; // (+A)
                     *gh.entry(actions_ref).or_insert(0) += 1; // (number of occurences of each integer)
                     *goal += actions_ref;  // updating game goal adding as values gaurenteed to be positive
                 }
-                
             }
-            validate(&mut actions,&mut card_state_map,&mut integer_history_map,random_choice,&mut goal);
+            validate(&mut actions, &mut card_state_map, &mut integer_history_map, random_choice, &mut goal);
             game_step += 1;
-            
 
-            
-            let state_string = format!("Game Step {} , \n card game_state {:?} ,\n  actions {:?} ,\n chosen_actions {} ,\n goal {}", game_step,card_state_map,actions,random_choice,goal);
+
+            let state_string = format!("Game Step {} , \n card game_state {:?} ,\n  actions {:?} ,\n chosen_actions {} ,\n goal {}", game_step, card_state_map, actions, random_choice, goal);
             println!("\n {:?}", state_string);
-            
         }
-
-        
     }
-    
-    pub fn stb_max(&self) ->(){
 
+    pub fn stb_max(&self) -> () {
         let mut game_sequence: Vec<i32> = vec![];
         let mut integer_history_map = self.create_hashmap();
         let mut card_state_map = self.create_flip_map();
@@ -369,8 +356,8 @@ impl STB{
             drop(inst);
         }
     }
-    
-    pub fn stb_min(&self) ->(){
+
+    pub fn stb_min(&self) -> () {
         let mut game_sequence: Vec<i32> = vec![];
         let mut integer_history_map = self.create_hashmap();
         let mut card_state_map = self.create_flip_map();
@@ -411,9 +398,8 @@ impl STB{
             println!("\n {:?}", state_string);
         }
     }
-    
-    pub fn stb_median_single_die(&self) ->() {
-        
+
+    pub fn stb_median_single_die(&self) -> () {
         let mut game_sequence: Vec<i32> = vec![];
         let mut integer_history_map = self.create_hashmap();
         let mut card_state_map = self.create_flip_map();
@@ -433,7 +419,7 @@ impl STB{
                     let err: i32 = (a - c).pow(2);
                     err
                 }
-                let mut min_index : usize = 0;
+                let mut min_index: usize = 0;
 
                 let mut err: Vec<i32> = vec![];
                 for i in 0..actions.len() {
@@ -446,14 +432,13 @@ impl STB{
                     }
                 }
                 min_index
-                
             }
-            
+
 
             // optimal strat ~ max choice
 
-            let mut optimal_choice = actions[get_error(&actions,single_median)];
-            
+            let mut optimal_choice = actions[get_error(&actions, single_median)];
+
             let chosen_action = optimal_choice;
 
             fn validate(actions: &mut Vec<i32>, fm: &mut HashMap<i32, i32>, gh: &mut HashMap<i32, i32>, ca: i32, goal: &mut i32) -> () {
@@ -480,8 +465,7 @@ impl STB{
         }
     }
 
-    pub fn stb_median_sum_die(&self) ->() {
-
+    pub fn stb_median_sum_die(&self) -> () {
         let mut game_sequence: Vec<i32> = vec![];
         let mut integer_history_map = self.create_hashmap();
         let mut card_state_map = self.create_flip_map();
@@ -501,7 +485,7 @@ impl STB{
                     let err: i32 = (a - c).pow(2);
                     err
                 }
-                let mut min_index : usize = 0;
+                let mut min_index: usize = 0;
 
                 let mut err: Vec<i32> = vec![];
                 for i in 0..actions.len() {
@@ -514,13 +498,106 @@ impl STB{
                     }
                 }
                 min_index
-
             }
 
 
             // optimal strat ~ max choice
 
-            let mut optimal_choice = actions[get_error(&actions,single_median)];
+            let mut optimal_choice = actions[get_error(&actions, single_median)];
+
+            let chosen_action = optimal_choice;
+
+            fn validate(actions: &mut Vec<i32>, fm: &mut HashMap<i32, i32>, gh: &mut HashMap<i32, i32>, ca: i32, goal: &mut i32) -> () {
+                let mut actions_ref = ca;
+                if *fm.get(&actions_ref).unwrap() == 1 {  // flipped up , ie only valid actions is to flip it down (corresponds with -A)
+                    fm.insert(actions_ref, 0); // flip card state (ie overwriting fm)
+                    actions_ref = -ca; // (-A)
+                    *gh.entry(actions_ref).or_insert(0) += 1; // (number of occurences of each integer)
+                    *goal += actions_ref;  // updating game goal adding as values gaurenteed to be negative
+
+                } else { // flipped down , ie only valid action is to flip up (corresponds with +A)
+                    fm.insert(actions_ref, 1); // flip card state (ie overwriting fm)
+                    actions_ref = ca; // (+A)
+                    *gh.entry(actions_ref).or_insert(0) += 1; // (number of occurences of each integer)
+                    *goal += actions_ref;  // updating game goal adding as values gaurenteed to be positive
+                }
+            }
+            validate(&mut actions, &mut card_state_map, &mut integer_history_map, chosen_action, &mut goal);
+            game_step += 1;
+
+
+            let state_string = format!("Game Step {} , \n card game_state {:?} ,\n  actions {:?} ,\n chosen_actions {} ,\n goal {}", game_step, card_state_map, actions, chosen_action, goal);
+            println!("\n {:?}", state_string);
+        }
+    }
+
+    pub fn stb_sum_choice(&self) -> () {
+        let mut game_sequence: Vec<i32> = vec![];
+        let mut integer_history_map = self.create_hashmap();
+        let mut card_state_map = self.create_flip_map();
+        let mut goal = self.goal();
+        let mut game_step: i32 = 0;
+
+
+        while goal != 0 {
+            let mut actions = self.simulate_die();
+
+            // optimal strat ~ max choice
+
+            let mut optimal_choice = actions[actions.len() - 1];
+
+
+            let chosen_action = optimal_choice;
+
+            fn validate(actions: &mut Vec<i32>, fm: &mut HashMap<i32, i32>, gh: &mut HashMap<i32, i32>, ca: i32, goal: &mut i32) -> () {
+                let mut actions_ref = ca;
+                if *fm.get(&actions_ref).unwrap() == 1 {  // flipped up , ie only valid actions is to flip it down (corresponds with -A)
+                    fm.insert(actions_ref, 0); // flip card state (ie overwriting fm)
+                    actions_ref = -ca; // (-A)
+                    *gh.entry(actions_ref).or_insert(0) += 1; // (number of occurences of each integer)
+                    *goal += actions_ref;  // updating game goal adding as values gaurenteed to be negative
+
+                } else { // flipped down , ie only valid action is to flip up (corresponds with +A)
+                    fm.insert(actions_ref, 1); // flip card state (ie overwriting fm)
+                    actions_ref = ca; // (+A)
+                    *gh.entry(actions_ref).or_insert(0) += 1; // (number of occurences of each integer)
+                    *goal += actions_ref;  // updating game goal adding as values gaurenteed to be positive
+                }
+            }
+            validate(&mut actions, &mut card_state_map, &mut integer_history_map, chosen_action, &mut goal);
+            game_step += 1;
+
+
+            let state_string = format!("Game Step {} , \n card game_state {:?} ,\n  actions {:?} ,\n chosen_actions {} ,\n goal {}", game_step, card_state_map, actions, chosen_action, goal);
+            println!("\n {:?}", state_string);
+        }
+    }
+
+
+    pub fn stb_prob_choice(&self) -> () {
+        let mut game_sequence: Vec<i32> = vec![];
+        let mut integer_history_map = self.create_hashmap();
+        let mut card_state_map = self.create_flip_map();
+        let mut goal = self.goal();
+        let mut game_step: i32 = 0;
+
+        let prob: f32 = (self.m_trials as f32 - 1.0) / (self.m_trials as f32);
+
+
+        while goal != 0 {
+            let mut optimal_choice = 0;
+            let mut actions = self.simulate_die();
+            let p: f32 = random_range(0.0..1.0);
+
+            if p > prob {
+                optimal_choice = actions[actions.len() - 1];
+            } else {
+                let limit: i32 = (actions.len() - 2) as i32;
+                let r: usize = random_range(0..limit) as usize;
+                optimal_choice = actions[r];
+            }
+
+            // from paper
 
             let chosen_action = optimal_choice;
 
@@ -548,7 +625,15 @@ impl STB{
         }
     }
     
-    
-    
+    pub fn stb_prob(&self,p:f32) -> (){
+
+
+
+
+        ()
+        
+        
+        
+    }
 }
 
