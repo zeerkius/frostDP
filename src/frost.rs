@@ -18,7 +18,7 @@ use rand::{random_iter, SeedableRng};
 use rand::rngs::StdRng;
 use rand::random_range;
 use std::*;
-
+use std::cmp::min_by;
 
 pub struct CoinChange{
     pub coins : Vec<usize>,
@@ -625,15 +625,78 @@ impl STB {
         }
     }
     
-    pub fn stb_prob(&self,p:f32) -> (){
+    fn stb_prob(&self,p:f32) -> (i32,f32){
+        let mut game_sequence: Vec<i32> = vec![];
+        let mut integer_history_map = self.create_hashmap();
+        let mut card_state_map = self.create_flip_map();
+        let mut goal = self.goal();
+        let mut game_step: i32 = 0;
 
+        let prob: f32 = p;
 
+        let mut sum_choice : i32 = 0;
+        while goal != 0 {
+            let mut optimal_choice = 0;
+            let mut actions = self.simulate_die();
+            let p: f32 = random_range(0.0..1.0);
 
+            if p > prob {
+                optimal_choice = actions[actions.len() - 1];
+                sum_choice += 1;
+            } else {
+                let limit: i32 = (actions.len() - 2) as i32;
+                let r: usize = random_range(0..limit) as usize;
+                optimal_choice = actions[r];
+            }
 
-        ()
+            // from paper
+
+            let chosen_action = optimal_choice;
+
+            fn validate(actions: &mut Vec<i32>, fm: &mut HashMap<i32, i32>, gh: &mut HashMap<i32, i32>, ca: i32, goal: &mut i32) -> () {
+                let mut actions_ref = ca;
+                if *fm.get(&actions_ref).unwrap() == 1 {  // flipped up , ie only valid actions is to flip it down (corresponds with -A)
+                    fm.insert(actions_ref, 0); // flip card state (ie overwriting fm)
+                    actions_ref = -ca; // (-A)
+                    *gh.entry(actions_ref).or_insert(0) += 1; // (number of occurences of each integer)
+                    *goal += actions_ref;  // updating game goal adding as values gaurenteed to be negative
+
+                } else { // flipped down , ie only valid action is to flip up (corresponds with +A)
+                    fm.insert(actions_ref, 1); // flip card state (ie overwriting fm)
+                    actions_ref = ca; // (+A)
+                    *gh.entry(actions_ref).or_insert(0) += 1; // (number of occurences of each integer)
+                    *goal += actions_ref;  // updating game goal adding as values gaurenteed to be positive
+                }
+            }
+            validate(&mut actions, &mut card_state_map, &mut integer_history_map, chosen_action, &mut goal);
+            game_step += 1;
+            
+        }
+        let sum_portion : f32 = (sum_choice as f32 / game_step as f32 );
+        let res = format!(" Game  Steps {:?} , Portion of Sum Choice {:?}" ,game_step,sum_portion);
+        println!("{:?}",res);
         
         
+        (game_step,sum_portion)
+
         
+        
+    }
+    
+    
+    pub fn stb_test(&self,p_vec:Vec<f32>) -> i32{
+        let mut min_step  : i32 = 1000000000;
+        for p in p_vec{
+            let res = self.stb_prob(p);
+            let steps = res.0;
+            let p = res.1;
+            if min_step <= steps{
+                min_step = steps;
+                println!("New Record {:?}",min_step);
+                println!("p of sum choice {:?}",p);
+            }
+        }
+        min_step
     }
 }
 

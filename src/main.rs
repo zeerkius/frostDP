@@ -20,7 +20,9 @@ use frost::STB;
 fn main() {
     let sim = STB::new(6,2).unwrap();
     
-    println!(" {:?}",sim.stb_prob_choice());
+    let boundary = vec![0.1,0.15,0.2,0.25,0.3,0.35,0.4,0.5,0.505,0.6,0.65,0.7,0.8,0.9,1.0];
+    
+    println!(" {:?}",sim.stb_test(boundary));
     
     
 
