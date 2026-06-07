@@ -18,7 +18,7 @@ use rand::{random_iter, SeedableRng};
 use rand::rngs::StdRng;
 use rand::random_range;
 use std::*;
-use std::cmp::min_by;
+
 
 pub struct CoinChange{
     pub coins : Vec<usize>,
@@ -572,8 +572,7 @@ impl STB {
             println!("\n {:?}", state_string);
         }
     }
-
-
+    
     pub fn stb_prob_choice(&self) -> () {
         let mut game_sequence: Vec<i32> = vec![];
         let mut integer_history_map = self.create_hashmap();
@@ -684,19 +683,213 @@ impl STB {
     }
     
     
-    pub fn stb_test(&self,p_vec:Vec<f32>) -> i32{
-        let mut min_step  : i32 = 1000000000;
+    pub fn value_iteration(&self,d:f32,k:i32) -> Vec<Vec<f32>>{
+        
+        // actual goal for any (m,n)
+        let integer_states = self.goal() as usize;
+        let G = self.goal();
+        let actions = self.m_trials * self.n_die;
+        let denominator : f32 = actions as f32;
+
+        
+        // matrix that ranks all choices (mn x G) , {mn} rows (actions) , and {G} columns (state)
+        
+        let mut policy_sheet : Vec<Vec<f32>> = vec![vec![0.0 ;actions];integer_states];
+        
+        fn make_reward(curr_state : i32, action : i32, goal : i32) -> i32{ // essentially based on the G and how close we are to 0 the terminal state we change the potential reward
+            if curr_state + action == goal{
+                action
+            }else if (curr_state + action > goal){
+                let reward : i32 = goal - (curr_state + action);
+                return reward;
+            }else{
+                let reward : i32 = action;
+                return reward;
+            }
+        }
+
+        fn get_prob(car_p : Vec<Vec<i32>>) -> Vec<f32>{
+
+
+            let mut hm : HashMap<i32,i32> = HashMap::new();
+            let mut actions : HashSet<i32> = HashSet::new();
+
+            let mut p_vec : Vec<f32> = vec![];
+            let mut c : f32 = 0.0;
+
+            for s in car_p{
+                let u = s.len();
+                    for i in 0..u{
+                        c += 1.0;
+                        *hm.entry(s[i]).or_insert(0) += 1;
+                        actions.insert(s[i]);
+                    }
+            }
+
+            let mut p_vec : Vec<f32> = vec![];
+
+
+            for a in actions.iter(){
+                let int_count : f32 = *hm.get_mut(a).unwrap() as f32;
+                p_vec.push(int_count / c);
+            }
+            
+            p_vec
+            }
+
+        fn value_iteration(curr: f32, reward : f32 , p : f32 , max_next : f32 , d: f32) -> f32{
+
+            let mut curr_ref = curr;
+            curr_ref += p * (reward + (d * max_next));
+            curr_ref
+        }
+
+        fn get_max(action_vec : &Vec<f32>) -> f32{
+            let max = action_vec.iter().cloned().fold(f32::NEG_INFINITY,f32::max);
+            max
+        }
+
+        // essentially we do it for any configuration of m and n
+
+        let p_inst : Vec<Vec<i32>> = self.cartesian_power();
+
+        let p_inst_len : usize = p_inst.len();
+
+        let dens : f32 = p_inst[0..p_inst_len].to_vec().len() as f32;
+
+        let curr_p_vec = get_prob(p_inst);
+
+        let action_vector : Vec<usize> = (1..actions).collect();
+
+
+        for sweep in 0..k{
+            println!(" Iteration Count {:?}", sweep);
+            for i in 0..policy_sheet.len(){
+                for j in 0..policy_sheet[i].len(){
+                    let curr_ref : f32 = policy_sheet[i][j];
+                    let curr_a : i32 = (j + 1) as i32;
+                    let curr_s : i32 = i as i32;
+                    let curr_p : f32 = curr_p_vec[j];
+                    let r : i32 = make_reward(curr_s,curr_a,G);
+                    let f_r : f32 = (r as f32) * (0.00001); // scaling to avoid  inf during value iteration so R * (10 ** -4)
+                    let new_state : i32 = (curr_s + r);
+                    let new_state_index : usize = (new_state - 1) as usize;
+                    let new_state_vec : Vec<f32> = policy_sheet[new_state_index].clone(); // 0 indexed
+                    let max_a : f32 = get_max(&new_state_vec);
+                    policy_sheet[i][j] += value_iteration(curr_s as f32,f_r,curr_p,max_a,d);
+                }
+            }
+        }
+
+        let M = format!(" Policy Sheet for  m = {:?}, n = {:?} Is V_k = {:?}",self.m_trials,self.n_die,policy_sheet);
+        println!("Full Sweep {:?}",M);
+
+        policy_sheet
+    }
+    
+    fn get_max_f(&self,f : Vec<f32>) -> f32{
+        let max : f32 = f.iter().cloned().fold(f32::NEG_INFINITY,f32::max);
+        max
+    }
+    
+    
+    fn iteration_conversion(&self , V : Vec<Vec<f32>>) -> {
+        
+        let integer_states = V.len();
+        let integer_actions = V[0].len();
+        
+        for i in 0..integer_states{
+            
+            while 
+            
+            V[i]
+            
+            
+            
+            
+            
+            
+            
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    };
+    
+    fn make_policy_run_sim(&self,value_iterated: Vec<Vec<f32>> , k : i32 , discount_vector : Vec<f32>) -> {
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+    };
+    
+
+    
+    
+    
+
+    pub fn stb_test(&self,p_vec:Vec<f32>) -> (i32,f32,f32){
+        let base : i32 = 2;
+        let mut min_step  : i32 = base.pow(30) - 1; // signed int max
+        
+        let m : usize = self.m_trials;
+        let n : usize = self.n_die;
+        
+        
+        let mut min_curr : i32 = min_step;
+        let mut index_ct : usize = 0;
+        let mut min_p : f32 = 0.0;
+        let mut portion_of_sum : f32 = 0.0;
+        
         for p in p_vec{
             let res = self.stb_prob(p);
             let steps = res.0;
-            let p = res.1;
-            if min_step <= steps{
+            portion_of_sum = res.1;
+            if steps < min_step{
                 min_step = steps;
-                println!("New Record {:?}",min_step);
-                println!("p of sum choice {:?}",p);
+                min_p = p
             }
+            index_ct += 1;
         }
-        min_step
+        let optimal_policy = format!("Minimum Steps for m = {:?} , n = {:?}, Is  {:?} steps , Using Boundary {:?} , Portion of Sum {:?} ",m,n,min_step,min_p,portion_of_sum);
+        (min_step,min_p,portion_of_sum)
     }
 }
 
